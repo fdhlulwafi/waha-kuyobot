@@ -1,0 +1,1492 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# INTRODUCTION\n- You are a WhatsApp chatbot.\n- Your goal is to assist users in a friendly, approachable, and helpful manner.\n- You can provide information, guidance, or just chat casually, depending on what the user wants.\n\n# CHAT STYLE\n- You are currently talking to {{ $('WAHA Trigger').item.json.payload.media._data.notifyName }}\n- Keep messages concise and easy to read on WhatsApp.\n- Use emojis sparingly to add warmth without overwhelming the message.\n- Be polite, patient, and positive, even if the user is frustrated or asks repetitive questions.\n- If you don’t know the answer, use [Search Engine] to get the information\n- Avoid long paragraphs; break messages into small, readable chunks.\n\n# BEHAVIOR\n- Greet the user warmly when they first send a message.\n- Remember the context of the conversation during the chat session.\n- Encourage engagement: ask follow-up questions if it helps clarify user needs.\n- Do not share external links unless explicitly instructed by the user.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        96,
+        208
+      ],
+      "id": "612f7b05-d81b-434a-9624-b0476a8d57f9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "202af928-a324-411a-bf15-68a349e7bf9e",
+                    "leftValue": "={{ $json.payload._data.type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.payload.media._data.type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "08fd0c80-307e-4f45-b1de-35192ee4ec5e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -400,
+        160
+      ],
+      "id": "fbc23a4c-e8ae-4cc3-8444-a22acad67937",
+      "name": "Check Input Type"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.payload.media.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wahaApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "557b275a-ae81-4057-8f70-92d9a4f68a6d",
+      "name": "Download Image",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=Describe the image in detail.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        176,
+        0
+      ],
+      "id": "928dfd52-2008-4a60-ae96-09c8b331a55c",
+      "name": "Analyze Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "LUhS4GFId8ov5yHo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
+              "name": "text",
+              "value": "=# The user provided the following image and text.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body || \"Describe the image\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        0
+      ],
+      "id": "e4605006-97cf-48df-881f-bd347349401e",
+      "name": "Image + Text Prompt"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c05a7fbf-309a-407e-9fee-7e0b03f4a5c8",
+              "name": "text",
+              "value": "={{ $json.payload.media._data.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        208
+      ],
+      "id": "a1e7f781-a038-422b-a5a5-6008cc9badaf",
+      "name": "Text Only Prompt"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        416
+      ],
+      "id": "4d9f9310-94cf-45d4-a914-1412fbfbcb5b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "LUhS4GFId8ov5yHo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        400,
+        416
+      ],
+      "id": "695e80ad-fb7a-4882-98b0-69cdc1a27d4f",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "INSERT YOUR KEY"
+            },
+            {
+              "name": "cx",
+              "value": "INSERT YOUR CX"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        416
+      ],
+      "id": "4d7b423b-fd95-4878-9d83-e5b0f219f91c",
+      "name": "Search Engine"
+    },
+    {
+      "parameters": {},
+      "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+      "typeVersion": 202502,
+      "position": [
+        -1344,
+        144
+      ],
+      "id": "3288340d-f4c9-47ea-ba08-8d88cdbb967e",
+      "name": "WAHA Trigger",
+      "webhookId": "b924a7bf-e13b-4817-9b4a-60f02ad05c7c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "77cf38f6-61ea-4349-973b-1124e60042e2",
+              "leftValue": "={{ $json.payload.from }}",
+              "rightValue": "@c.us",
+              "operator": {
+                "type": "string",
+                "operation": "endsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        352
+      ],
+      "id": "8b513750-a572-4fbd-a2b9-cc86b22e4e36",
+      "name": "Personal or Group?"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+                    "rightValue": "/help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "c5b90926-89b8-4879-be78-7efa5e24f39f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Help"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7e4dbe6a-da50-4c02-b091-092ec1c26510",
+                    "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+                    "rightValue": "/search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Search"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b446dc86-06cc-4e3f-a219-acb05277303a",
+                    "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+                    "rightValue": "/image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d749e4bd-1e01-42fb-a4bb-b7d99ce49718",
+                    "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+                    "rightValue": "/song",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Song"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -448,
+        864
+      ],
+      "id": "11cd9888-5f9a-4245-b28a-6562c2481602",
+      "name": "Command"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        448,
+        208
+      ],
+      "id": "428f415e-262d-419e-a12e-f717c201b0a0",
+      "name": "Send Personal Message",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=*🤖Command for Chatbot🤖*\n\n🔴 /search - Search from web\n⚪ /image - Transcript image\n🔴 /song - Download song",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        0,
+        576
+      ],
+      "id": "7ec46b2d-7fe4-4388-bc67-c2d27b11358d",
+      "name": "Command Help",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.payload.media.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wahaApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        1072
+      ],
+      "id": "0b640038-b928-449e-9191-23f612e58943",
+      "name": "Download Image1",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "={{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') + \" based on your opinion. Act like you have your own personal taste. Extra context: Smash = Marry, Pass = Wouldn't Marry\" || \"Describe the image in detail.\" }}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        192,
+        1072
+      ],
+      "id": "d2c30491-8f7d-4ead-a133-dcff32034804",
+      "name": "Analyze Image1",
+      "credentials": {
+        "openAiApi": {
+          "id": "LUhS4GFId8ov5yHo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
+              "name": "text",
+              "value": "=# The user provided the following image and text.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') || \"Describe the image\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        1072
+      ],
+      "id": "45ad4f7d-8394-47e7-9838-67d96661aba6",
+      "name": "Image + Text Prompt1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        1296
+      ],
+      "id": "a7ad7935-c0a0-4fdf-8cc1-5bcb665a18d8",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "LUhS4GFId8ov5yHo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "INSERT YOUR KEY"
+            },
+            {
+              "name": "cx",
+              "value": "INSERT YOUR CX"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        1296
+      ],
+      "id": "094590e7-8701-498c-9ecb-424124844399",
+      "name": "Search Engine1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WAHA Trigger').item.json.payload._data.notifyName }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        80,
+        416
+      ],
+      "id": "764d7d44-f38a-478c-a5f8-734dea08139b",
+      "name": "Store Conversation",
+      "credentials": {
+        "redis": {
+          "id": "v559yPpJK8A2M5ej",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# INTRODUCTION\n- You are an image transcription bot.\n- Your goal is to provide direct, concise, and accurate answers without unnecessary commentary.\n- You can provide information, guidance based on the image given.\n\n# CHAT STYLE\n- Keep messages concise and easy to read on WhatsApp.\n- Answer directly and briefly, like a knowledgeable assistant.\n- Use emojis only when it adds meaningful context.\n- If you don’t know the answer, use [Search Engine] to get the information.\n- Avoid long paragraphs; break messages into small, readable chunks, unless the user ask to do so.\n- Avoid filler phrases like “Let me know if you need more information” or “I’m here to help.”\n\n# BEHAVIOR\n- Do not share external links unless explicitly instructed by the user.\n- Do not add polite closings or extra suggestions unless explicitly asked.\n- Do not ask addition question.\n- Stay on topic; avoid unnecessary chatter or commentary.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        720,
+        1072
+      ],
+      "id": "645ce67b-ae3d-4aab-a3bc-4e1cfc99ef10",
+      "name": "AI Image Transcription"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c05a7fbf-309a-407e-9fee-7e0b03f4a5c8",
+              "name": "text",
+              "value": "={{ $json.payload.media._data.body.replace('/search ','') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        752
+      ],
+      "id": "7064e756-9cdf-45cd-9826-b32f1d2e2f9f",
+      "name": "Search Title"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# INTRODUCTION\n- You are a searchin bot.\n- Your goal is to provide direct, concise, and accurate answers without unnecessary commentary.\n\n# CHAT STYLE\n- Keep messages concise and easy to read on WhatsApp.\n- Answer directly and briefly, like a knowledgeable assistant.\n- Ensure that the information is the most recent and latest\n- Use [Search Engine2] to get the most related article\n- Avoid long paragraphs; break messages into small, readable chunks, unless the user ask to do so.\n- By default, give only one the most related article. If user ask for spesific number, follow the request.\n\n# FORMAT STYLE\n\"1. (Information)\nSource: (Give URL)\n\nMini Conclusion: (Give short, precise conclusion)\"\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        288,
+        576
+      ],
+      "id": "20af39fb-65eb-4309-895c-fce974cfec0a",
+      "name": "AI Image Transcription1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        752
+      ],
+      "id": "e2b3d42e-2352-4591-aede-ce8b693eb383",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "LUhS4GFId8ov5yHo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "INSERT YOUR KEY"
+            },
+            {
+              "name": "cx",
+              "value": "INSERT YOUR CX"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        752
+      ],
+      "id": "1d85c9f8-d318-4724-8a7d-2bb1e29a6372",
+      "name": "Search Engine2"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1024,
+        1072
+      ],
+      "id": "6b55f1a5-559d-4f95-98b7-669a65c7ddcd",
+      "name": "Image Commentary",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        640,
+        576
+      ],
+      "id": "1f52e788-c2c9-4c72-95f7-8a0011d854ff",
+      "name": "Search Result",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "key",
+              "value": "INSERT YOUR KEY"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.payload.body.replace ('/song ','') }} lyrics"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        1264
+      ],
+      "id": "365feb12-b436-4354-ae54-6cbc243f74e5",
+      "name": "Get YT Link"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=🎶Your Song: {{ $json.file }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        480,
+        1392
+      ],
+      "id": "97e13b89-c442-4ba5-9ec7-9b91a1864200",
+      "name": "Send Audio Link",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yt.fiverse.my/download",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "=https://www.youtube.com/watch?v={{ $json.items[0].id.videoId }}"
+            },
+            {
+              "name": "type",
+              "value": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        1264
+      ],
+      "id": "6d04020d-9726-4727-abdb-469ad33b082d",
+      "name": "Download Audio"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "503b541f-7749-4d0e-bf10-81cf8da6e96c",
+              "leftValue": "={{ $json.payload.media._data.quotedMsg.type }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        944
+      ],
+      "id": "decfa300-1a72-444d-b722-1eb43380f388",
+      "name": "Reply or Not?"
+    },
+    {
+      "parameters": {
+        "resource": "Chats",
+        "operation": "Get Chat Message",
+        "chatId": "={{ $json.payload._data.quotedMsg.from }}",
+        "messageId": "={{ $json.payload.replyTo._data.id._serialized }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        32,
+        912
+      ],
+      "id": "2ea9dc7b-1600-4005-b86b-6cae6f5cf70f",
+      "name": "Gets message by id",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.media.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wahaApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        912
+      ],
+      "id": "02e508dc-2b3e-4b0c-99ef-3afbae5299d9",
+      "name": "Download Image2",
+      "credentials": {
+        "wahaApi": {
+          "id": "PljTalUOeErfOzxx",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "={{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') || \"Describe the image in detail.\" }}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        352,
+        912
+      ],
+      "id": "fca5b7eb-1267-44b4-b439-829de092f1d0",
+      "name": "Analyze Image2",
+      "credentials": {
+        "openAiApi": {
+          "id": "LUhS4GFId8ov5yHo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
+              "name": "text",
+              "value": "=# The user replied the following image and caption.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') || \"Describe the image\" }}\n\n## REPLIED IMAGE CAPTION:\n\"{{ $('Gets message by id').item.json.body.replace('/image ','') }}\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        912
+      ],
+      "id": "f30a5c97-c944-45e1-80a5-624560d333e3",
+      "name": "Image + Caption"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yt.fiverse.my/download",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.payload.body.replace('/song ','') }}"
+            },
+            {
+              "name": "type",
+              "value": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        1472
+      ],
+      "id": "234c3ad7-68d4-4498-96f2-89f451151695",
+      "name": "Download Audio1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "162461a2-3fc5-41b0-b4af-fae97fa62e6c",
+              "leftValue": "={{ $json.payload.body }}",
+              "rightValue": "/song https://",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        1360
+      ],
+      "id": "320a6b6f-4bf3-4503-939a-0f6951b3f373",
+      "name": "Title or Link?"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "1. Image Transcription",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        848,
+        1296
+      ],
+      "id": "a57e6ff2-272c-41cc-93b3-7d61dc00420f",
+      "name": "Store Image Transcription",
+      "credentials": {
+        "redis": {
+          "id": "v559yPpJK8A2M5ej",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Personal Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Input Type": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Text Only Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Image + Text Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Only Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image + Text Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Engine": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAHA Trigger": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Personal or Group?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personal or Group?": {
+      "main": [
+        [
+          {
+            "node": "Check Input Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Command": {
+      "main": [
+        [
+          {
+            "node": "Command Help",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Title",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply or Not?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Title or Link?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image1": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image1": {
+      "main": [
+        [
+          {
+            "node": "Image + Text Prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Image Transcription",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Engine1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Image Transcription",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image + Text Prompt1": {
+      "main": [
+        [
+          {
+            "node": "AI Image Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Conversation": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Title": {
+      "main": [
+        [
+          {
+            "node": "AI Image Transcription1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Image Transcription1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Engine2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Image Transcription1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Image Transcription": {
+      "main": [
+        [
+          {
+            "node": "Image Commentary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Image Transcription1": {
+      "main": [
+        [
+          {
+            "node": "Search Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get YT Link": {
+      "main": [
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "Send Audio Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply or Not?": {
+      "main": [
+        [
+          {
+            "node": "Gets message by id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gets message by id": {
+      "main": [
+        [
+          {
+            "node": "Download Image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image2": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image2": {
+      "main": [
+        [
+          {
+            "node": "Image + Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image + Caption": {
+      "main": [
+        [
+          {
+            "node": "AI Image Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio1": {
+      "main": [
+        [
+          {
+            "node": "Send Audio Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Title or Link?": {
+      "main": [
+        [
+          {
+            "node": "Get YT Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Audio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Image Transcription": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Image Transcription",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c489611e-568a-4939-a5a0-1d86d84a1ea9",
+  "meta": {
+    "instanceId": "02ca211bb7f80befae91df4f8356790118fa4009bc76bc98463890b1878a38e6"
+  },
+  "id": "z4TEm6eNRXTuxW7N",
+  "tags": []
+}
