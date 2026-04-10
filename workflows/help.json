@@ -1,0 +1,76 @@
+{
+  "name": "Help",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=*🤖Command for KuYoBot🤖*\n\n`/s` : ```Search from web```\n`/i` : ```Transcript image```\n`/v` : ```Download video from YT/TT/IG/FB/X```\n`/a` : ```Download audio from YT/TT/IG/FB/X```\n`/genshin` : ```Fetch Genshin Information```",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [624, 352],
+      "id": "e4403f84-3fa7-49d4-8b06-8f2d39179598",
+      "name": "Command Help",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": { "inputSource": "passthrough" },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "WAHA Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [272, 352]
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [448, 352],
+      "id": "3963bf9b-657a-4540-b10b-e2ca63bb15fe",
+      "name": "Start Typing",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [800, 352],
+      "id": "93692546-1150-4a39-bff1-1d0e1d7c6d7e",
+      "name": "Stop Typing",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    }
+  ],
+  "connections": {
+    "Command Help": { "main": [[{ "node": "Stop Typing", "type": "main", "index": 0 }]] },
+    "WAHA Trigger": { "main": [[{ "node": "Start Typing", "type": "main", "index": 0 }]] },
+    "Start Typing": { "main": [[{ "node": "Command Help", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "meta": null,
+  "staticData": null
+}

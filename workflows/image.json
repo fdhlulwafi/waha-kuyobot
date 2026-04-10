@@ -1,0 +1,526 @@
+{
+  "name": "Image",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
+              "name": "text",
+              "value": "=# The user provided the following image and text.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ \n  (function(){\n    const body = $('WAHA Trigger').item.json.payload.body || \"\";\n    const trimmed = body.trim();\n\n    if (trimmed === \"/i\") {\n      return \"Describe the image\";\n    }\n    if (trimmed.startsWith(\"/i \")) {\n      return trimmed.replace(\"/i \", \"\");\n    }\n    return trimmed;\n  })()\n}}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        304
+      ],
+      "id": "869180b6-c85f-4d67-a6e2-415788b20762",
+      "name": "Image + Text Prompt1"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1312,
+        240
+      ],
+      "id": "257eece7-6c0d-472b-924c-f3acf5ebca52",
+      "name": "Image Commentary",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "503b541f-7749-4d0e-bf10-81cf8da6e96c",
+              "leftValue": "={{ $('WAHA Trigger').item.json.payload.replyTo._data.imageMessage.mimetype }}",
+              "rightValue": "image/jpeg",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        176
+      ],
+      "id": "fc9a13fc-ca83-4786-ba77-e3f4629ca924",
+      "name": "Reply or Not?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
+              "name": "text",
+              "value": "=# The user replied the following image and caption.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body.replace('/i ','') || \"Describe the image\" }}\n\n## REPLIED IMAGE CAPTION:\n\"{{ $('Gets Replied Message').item.json.body.replace('/i ','') }}\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        144
+      ],
+      "id": "9a44a112-9fe9-46f3-9109-5ea321eedc93",
+      "name": "Image + Caption"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        -144,
+        176
+      ],
+      "id": "67f93f17-8839-410e-90aa-28ab83a6067f",
+      "name": "Start Typing3",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# ROLE\nYou are an image analysis assistant embedded in WhatsApp. You receive an image description and the user's question, then provide accurate and concise responses.\n\n# RULES\n- Answer based solely on what is visible in the image.\n- Be direct and concise — no filler phrases or polite closings.\n- Do not ask follow-up questions.\n- Do not share external links unless the user explicitly asks.\n- Stay on topic; avoid unnecessary commentary.\n\n# STYLE\n- Write for WhatsApp: short sentences, easy to read on mobile.\n- Use emojis only when they add meaningful context.\n- Break long responses into small readable chunks.\n- Keep responses under 150 words unless the user asks for more detail.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        992,
+        240
+      ],
+      "id": "5fc00d4a-8ced-473e-a92c-eecc33cef2c8",
+      "name": "AI Image"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "sessionTTL": 3600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1088,
+        464
+      ],
+      "id": "141ccc5a-2920-4b00-8979-55196910566d",
+      "name": "Redis (Image)",
+      "credentials": {
+        "redis": {
+          "id": "Cqe8AdOAsLFLRPfR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        176
+      ],
+      "id": "db5eb64a-3a43-4347-9b36-9455ba79af31",
+      "name": "WAHA Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1472,
+        240
+      ],
+      "id": "e4ac0dc9-75c3-4ff8-bdb6-e044abc59edb",
+      "name": "Stop Typing",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.media.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wahaApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        144
+      ],
+      "id": "8077598e-22a4-4aa6-a208-6a38f4f4bfb6",
+      "name": "Download Image (Reply)",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('WAHA Trigger').item.json.payload.media.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wahaApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        304
+      ],
+      "id": "e8ede7c8-da3c-4c09-8c87-7e7c37fb8958",
+      "name": "Download Image",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "={{ (function() { var body = $('WAHA Trigger').item.json.payload.body || ''; var trimmed = body.trim(); if (trimmed === '/i') { return 'Describe the image in detail.'; } return trimmed.replace('/i ', ''); })() }}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        624,
+        144
+      ],
+      "id": "be474507-9314-413e-8e44-75e7361185a5",
+      "name": "Analyze Image (Reply)",
+      "credentials": {
+        "openAiApi": {
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "={{ (function() { var body = $('WAHA Trigger').item.json.payload.body || ''; var trimmed = body.trim(); if (trimmed === '/i') { return 'Describe the image in detail.'; } return trimmed.replace('/i ', ''); })() }}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        432,
+        304
+      ],
+      "id": "a1c8d042-588c-403d-9124-8ba09259581b",
+      "name": "Analyze Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chats",
+        "operation": "Get Chat Message",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.replyTo.participant }}",
+        "messageId": "={{ $('WAHA Trigger').item.json.payload.replyTo.id }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        240,
+        144
+      ],
+      "id": "13ef8d75-83ce-4dcd-a6ca-3a02f5e539c8",
+      "name": "Gets Replied Message",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        464
+      ],
+      "id": "e684e0c0-0034-4276-b961-05c6311b386b",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Image + Text Prompt1": {
+      "main": [
+        [
+          {
+            "node": "AI Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Commentary": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply or Not?": {
+      "main": [
+        [
+          {
+            "node": "Gets Replied Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image + Caption": {
+      "main": [
+        [
+          {
+            "node": "AI Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing3": {
+      "main": [
+        [
+          {
+            "node": "Reply or Not?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Image": {
+      "main": [
+        [
+          {
+            "node": "Image Commentary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis (Image)": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Image",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAHA Trigger": {
+      "main": [
+        [
+          {
+            "node": "Start Typing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image (Reply)": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image (Reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image (Reply)": {
+      "main": [
+        [
+          {
+            "node": "Image + Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Image + Text Prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gets Replied Message": {
+      "main": [
+        [
+          {
+            "node": "Download Image (Reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Image",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "staticData": null
+}

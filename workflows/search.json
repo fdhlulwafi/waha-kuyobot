@@ -1,0 +1,214 @@
+{
+  "name": "Search",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c05a7fbf-309a-407e-9fee-7e0b03f4a5c8",
+              "name": "text",
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace('/s ','') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [64, 576],
+      "id": "ca20e69d-fc80-44e3-9951-4299b9376cd7",
+      "name": "Search Title"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# ROLE\nYou are a search assistant embedded in WhatsApp. Your job is to find accurate, up-to-date information using the **search_web** tool and deliver it clearly.\n\n# RULES\n- ALWAYS use **search_web** before answering — never rely on your training knowledge alone.\n- Search with a well-formed query based on the user's input.\n- If the first search returns poor results, refine and search again.\n- Only use information from the search results — do not fabricate sources or URLs.\n\n# STRICT RESULT LIMIT\n- ALWAYS return **exactly 1 result** by default. No exceptions.\n- ONLY return more if the user explicitly asks (e.g. \"give me 3\", \"show more\").\n- Even if the user asks for more, the absolute maximum is **3 results**. Never exceed 3.\n- Do NOT return 2 or 3 results just because the search returned multiple — pick the single best one.\n\n# RESPONSE FORMAT\n*[Title or Topic]*\n[2–3 sentence summary of the key information]\n\n📎 Source: [URL]\n\n💡 [One-line conclusion or takeaway]\n\nIf returning multiple results (only when user explicitly requests), number each one and repeat the format above.\n\n# STYLE\n- Write for WhatsApp: short sentences, no walls of text.\n- Use *bold* sparingly for key terms only.\n- Keep total response under 200 words unless the user asks for more detail.\n- Do not add greetings, sign-offs, or filler phrases.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [224, 576],
+      "id": "d1334d49-095d-4843-8aee-a8e209426fa5",
+      "name": "AI Search",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [480, 832],
+      "id": "03e2a8a5-888c-4270-96f0-b28c2daba33e",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search the web for current information, news, and facts. Input should be a search query string.",
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "q", "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('q', ``, 'string') }}" },
+            { "name": "count", "value": "5" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [336, 832],
+      "id": "14760af8-0e78-42f7-bbe2-d73ba7c22f5d",
+      "name": "search_web",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "iNYBm7fEgctScvsk",
+          "name": "Brave Search API"
+        }
+      }
+    },
+    {
+      "parameters": { "inputSource": "passthrough" },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "WAHA Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [-272, 576]
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [-96, 576],
+      "id": "dfa5701b-99ca-4061-b3f7-3728ee93def3",
+      "name": "Start Typing",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "value": "gpt-4o-mini", "mode": "list", "cachedResultName": "gpt-4o-mini" },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [96, 832],
+      "id": "e2f3e5ac-696a-43a4-89eb-681679a28dee",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": { "id": "NkjjZZHURFrwFzmh", "name": "OpenAi Fiverse" }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "sessionTTL": 3600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [208, 832],
+      "id": "5ad0da10-799a-418c-a8c3-f25233aa18c2",
+      "name": "Redis",
+      "credentials": {
+        "redis": { "id": "Cqe8AdOAsLFLRPfR", "name": "Redis account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [576, 496],
+      "id": "04f3a5a8-8003-4f7a-a048-eca97039a7e3",
+      "name": "Search Result (Success)",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=*Error:* {{ $json.error }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [576, 656],
+      "id": "4fefd1f0-0263-4499-bc9d-893963777a56",
+      "name": "Search Result (Error)",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [784, 576],
+      "id": "f4b8089d-4d5b-477b-a054-732c37e7bcf2",
+      "name": "Stop Typing",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    }
+  ],
+  "connections": {
+    "Search Title": { "main": [[{ "node": "AI Search", "type": "main", "index": 0 }]] },
+    "AI Search": {
+      "main": [
+        [{ "node": "Search Result (Success)", "type": "main", "index": 0 }],
+        [{ "node": "Search Result (Error)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Calculator": { "ai_tool": [[{ "node": "AI Search", "type": "ai_tool", "index": 0 }]] },
+    "search_web": { "ai_tool": [[{ "node": "AI Search", "type": "ai_tool", "index": 0 }]] },
+    "WAHA Trigger": { "main": [[{ "node": "Start Typing", "type": "main", "index": 0 }]] },
+    "Start Typing": { "main": [[{ "node": "Search Title", "type": "main", "index": 0 }]] },
+    "OpenAI": { "ai_languageModel": [[{ "node": "AI Search", "type": "ai_languageModel", "index": 0 }]] },
+    "Redis": { "ai_memory": [[{ "node": "AI Search", "type": "ai_memory", "index": 0 }]] },
+    "Search Result (Success)": { "main": [[{ "node": "Stop Typing", "type": "main", "index": 0 }]] },
+    "Search Result (Error)": { "main": [[{ "node": "Stop Typing", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": null,
+  "staticData": null
+}

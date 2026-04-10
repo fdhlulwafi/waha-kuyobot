@@ -1,0 +1,209 @@
+{
+  "name": "Video",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yt-dlp.fiverse.my/download",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "url", "value": "=https://www.youtube.com/watch?v={{ $json.items[0].id.videoId }}" },
+            { "name": "type", "value": "video" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [272, -128],
+      "id": "f6b74e62-4136-4fb2-8059-ebcf07f24d63",
+      "name": "Download Video",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Video",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "file": "={\n  \"mimetype\": \"video/mp4\",\n  \"filename\": \"{{ $json.file.split('/').pop() }}\",\n  \"url\": \"{{ $json.file }}\"\n}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "caption": "=📹 *Link to download:* {{ $json.file }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [496, -80],
+      "id": "3442a282-ff6f-4196-af25-7d481fb6b255",
+      "name": "Send Video Link",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=Sorry, cannot download the video.",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [496, 80],
+      "id": "8ba81225-d57c-4066-adac-6fb24faee075",
+      "name": "Send Error Message",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [720, 16],
+      "id": "a8c48f09-ed54-42d1-9674-47e248c70a62",
+      "name": "Stop Typing",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "part", "value": "snippet" },
+            { "name": "q", "value": "={{ $('WAHA Trigger').item.json.payload.body.replace ('/v ','') }}" }
+          ]
+        },
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpQueryAuth"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [64, -112],
+      "id": "1f73cd4b-c66a-4c6c-86aa-a6676d8777d7",
+      "name": "Get YT Link",
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpQueryAuth": { "id": "DRf3YK0OJE8cnMRY", "name": "YouTube Data API" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yt-dlp.fiverse.my/download",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "url", "value": "={{ $('WAHA Trigger').item.json.payload.body.replace('/v ','') }}" },
+            { "name": "type", "value": "video" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [64, 64],
+      "id": "923b118f-10bc-4260-970f-f6a9102e929c",
+      "name": "Download Video2",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "162461a2-3fc5-41b0-b4af-fae97fa62e6c",
+              "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+              "rightValue": "/v https://",
+              "operator": { "type": "string", "operation": "notStartsWith" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-192, -32],
+      "id": "0cf6015f-860a-4270-ad5b-5a7d935aff5f",
+      "name": "Title or Link?"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [-368, -32],
+      "id": "26304097-cb93-4ae3-bda4-f0ed6fca82bd",
+      "name": "Start Typing",
+      "credentials": {
+        "wahaApi": { "id": "D86Rp9kbbr37Pq8A", "name": "WAHA account" }
+      }
+    },
+    {
+      "parameters": { "inputSource": "passthrough" },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-544, -32],
+      "id": "ef29673a-cefa-4d47-b782-deca215abdd1",
+      "name": "WAHA Trigger"
+    }
+  ],
+  "connections": {
+    "Download Video": {
+      "main": [
+        [{ "node": "Send Video Link", "type": "main", "index": 0 }],
+        [{ "node": "Send Error Message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Video Link": { "main": [[{ "node": "Stop Typing", "type": "main", "index": 0 }]] },
+    "Send Error Message": { "main": [[{ "node": "Stop Typing", "type": "main", "index": 0 }]] },
+    "Get YT Link": {
+      "main": [
+        [{ "node": "Download Video", "type": "main", "index": 0 }],
+        [{ "node": "Send Error Message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Download Video2": {
+      "main": [
+        [{ "node": "Send Video Link", "type": "main", "index": 0 }],
+        [{ "node": "Send Error Message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Title or Link?": {
+      "main": [
+        [{ "node": "Get YT Link", "type": "main", "index": 0 }],
+        [{ "node": "Download Video2", "type": "main", "index": 0 }]
+      ]
+    },
+    "Start Typing": { "main": [[{ "node": "Title or Link?", "type": "main", "index": 0 }]] },
+    "WAHA Trigger": { "main": [[{ "node": "Start Typing", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "staticData": null
+}

@@ -1,0 +1,180 @@
+{
+  "name": "WhatsApp KuyoBot (Main)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+      "typeVersion": 202502,
+      "position": [96, 368],
+      "id": "1c291cde-8da5-435b-8162-6912bf650821",
+      "name": "WAHA Trigger",
+      "webhookId": "b924a7bf-e13b-4817-9b4a-60f02ad05c7c"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}", "rightValue": "/help", "operator": { "type": "string", "operation": "startsWith" }, "id": "c5b90926-89b8-4879-be78-7efa5e24f39f" }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Help"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "id": "7e4dbe6a-da50-4c02-b091-092ec1c26510", "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}", "rightValue": "/s", "operator": { "type": "string", "operation": "startsWith" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Search"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "id": "b446dc86-06cc-4e3f-a219-acb05277303a", "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}", "rightValue": "/i", "operator": { "type": "string", "operation": "startsWith" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "id": "d749e4bd-1e01-42fb-a4bb-b7d99ce49718", "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}", "rightValue": "/a", "operator": { "type": "string", "operation": "startsWith" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "id": "94dfce64-70f7-47d8-a334-227b39e38741", "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}", "rightValue": "/v", "operator": { "type": "string", "operation": "startsWith" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Video"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "id": "cb76c2d5-7fb7-4fd6-bd7c-1b3b912ca984", "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}", "rightValue": "/genshin", "operator": { "type": "string", "operation": "startsWith" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Genshin"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [368, 640],
+      "id": "59826ac0-c3c9-47c2-9e3e-d6330ed11878",
+      "name": "Command"
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "VM2KZ6UGp5SPuDbA", "mode": "list", "cachedResultUrl": "/workflow/VM2KZ6UGp5SPuDbA", "cachedResultName": "Help" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [768, 320],
+      "id": "dbda0bcf-0286-4cc5-8b24-704e7837b267",
+      "name": "Execute Help"
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "KgV0655DKsu5zS9G", "mode": "list", "cachedResultUrl": "/workflow/KgV0655DKsu5zS9G", "cachedResultName": "Search" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [768, 480],
+      "id": "50663507-a035-4f82-a437-f639a827f033",
+      "name": "Execute Search"
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "UafnszpNdDta97W7", "mode": "list", "cachedResultUrl": "/workflow/UafnszpNdDta97W7", "cachedResultName": "Image" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [768, 640],
+      "id": "124da639-0fdb-467e-8924-6ec6a1c70650",
+      "name": "Execute Image"
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "wbmsRwaYJgpXrjJc", "mode": "list", "cachedResultUrl": "/workflow/wbmsRwaYJgpXrjJc", "cachedResultName": "Audio" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [768, 800],
+      "id": "bf76d77b-f9ab-4e16-9fe4-a6303315d7fd",
+      "name": "Execute Audio"
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "Gur5SQNJQURY478F", "mode": "list", "cachedResultUrl": "/workflow/Gur5SQNJQURY478F", "cachedResultName": "Video" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [768, 960],
+      "id": "5c4f4f28-af6a-4df2-8253-01302c118e2f",
+      "name": "Execute Video"
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "66KiAcWa8hdum8k1", "mode": "list", "cachedResultUrl": "/workflow/66KiAcWa8hdum8k1", "cachedResultName": "Genshin" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [768, 1120],
+      "id": "3ba5b7a3-123c-48e8-be4b-3373e2512a16",
+      "name": "Execute Genshin"
+    }
+  ],
+  "connections": {
+    "WAHA Trigger": {
+      "main": [
+        [],
+        [{ "node": "Command", "type": "main", "index": 0 }]
+      ]
+    },
+    "Command": {
+      "main": [
+        [{ "node": "Execute Help", "type": "main", "index": 0 }],
+        [{ "node": "Execute Search", "type": "main", "index": 0 }],
+        [{ "node": "Execute Image", "type": "main", "index": 0 }],
+        [{ "node": "Execute Audio", "type": "main", "index": 0 }],
+        [{ "node": "Execute Video", "type": "main", "index": 0 }],
+        [{ "node": "Execute Genshin", "type": "main", "index": 0 }]
+      ]
+    },
+    "Execute Help": { "main": [[]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "meta": null,
+  "staticData": null
+}
