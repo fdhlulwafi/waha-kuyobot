@@ -407,7 +407,7 @@
             },
             {
               "name": "key",
-              "value": "AIzaSyC_vN4JTwh6XfgllLFOYbF5ui9b2fWTge0"
+              "value": "YOUR_YOUTUBE_API_KEY"
             },
             {
               "name": "q",
@@ -863,7 +863,7 @@
             },
             {
               "name": "key",
-              "value": "AIzaSyC_vN4JTwh6XfgllLFOYbF5ui9b2fWTge0"
+              "value": "YOUR_YOUTUBE_API_KEY"
             },
             {
               "name": "q",
@@ -1207,11 +1207,11 @@
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyCDVrXVsuI4jBJ5FjWhN4wAAUcvuTe_u6k"
+              "value": "YOUR_GOOGLE_SEARCH_API_KEY"
             },
             {
               "name": "cx",
-              "value": "d04ea059f84df4aaf"
+              "value": "YOUR_GOOGLE_SEARCH_CX"
             },
             {
               "name": "q",
