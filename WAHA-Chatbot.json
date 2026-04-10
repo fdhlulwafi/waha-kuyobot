@@ -1,295 +1,17 @@
 {
-  "name": "My workflow",
+  "name": "WhatsApp KuyoBot",
   "nodes": [
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.text }}",
-        "options": {
-          "systemMessage": "=# INTRODUCTION\n- You are a WhatsApp chatbot.\n- Your goal is to assist users in a friendly, approachable, and helpful manner.\n- You can provide information, guidance, or just chat casually, depending on what the user wants.\n\n# CHAT STYLE\n- You are currently talking to {{ $('WAHA Trigger').item.json.payload.media._data.notifyName }}\n- Keep messages concise and easy to read on WhatsApp.\n- Use emojis sparingly to add warmth without overwhelming the message.\n- Be polite, patient, and positive, even if the user is frustrated or asks repetitive questions.\n- If you don’t know the answer, use [Search Engine] to get the information\n- Avoid long paragraphs; break messages into small, readable chunks.\n\n# BEHAVIOR\n- Greet the user warmly when they first send a message.\n- Remember the context of the conversation during the chat session.\n- Encourage engagement: ask follow-up questions if it helps clarify user needs.\n- Do not share external links unless explicitly instructed by the user.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.9,
-      "position": [
-        96,
-        208
-      ],
-      "id": "612f7b05-d81b-434a-9624-b0476a8d57f9",
-      "name": "AI Agent"
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "202af928-a324-411a-bf15-68a349e7bf9e",
-                    "leftValue": "={{ $json.payload._data.type }}",
-                    "rightValue": "image",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Image"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.payload.media._data.type }}",
-                    "rightValue": "chat",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "08fd0c80-307e-4f45-b1de-35192ee4ec5e"
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Text"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        -400,
-        160
-      ],
-      "id": "fbc23a4c-e8ae-4cc3-8444-a22acad67937",
-      "name": "Check Input Type"
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.payload.media.url }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "wahaApi",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        0,
-        0
-      ],
-      "id": "557b275a-ae81-4057-8f70-92d9a4f68a6d",
-      "name": "Download Image",
-      "credentials": {
-        "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
-          "name": "WAHA account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "image",
-        "operation": "analyze",
-        "modelId": {
-          "__rl": true,
-          "value": "chatgpt-4o-latest",
-          "mode": "list",
-          "cachedResultName": "CHATGPT-4O-LATEST"
-        },
-        "text": "=Describe the image in detail.",
-        "inputType": "base64",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.8,
-      "position": [
-        176,
-        0
-      ],
-      "id": "928dfd52-2008-4a60-ae96-09c8b331a55c",
-      "name": "Analyze Image",
-      "credentials": {
-        "openAiApi": {
-          "id": "LUhS4GFId8ov5yHo",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
-              "name": "text",
-              "value": "=# The user provided the following image and text.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body || \"Describe the image\" }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        336,
-        0
-      ],
-      "id": "e4605006-97cf-48df-881f-bd347349401e",
-      "name": "Image + Text Prompt"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c05a7fbf-309a-407e-9fee-7e0b03f4a5c8",
-              "name": "text",
-              "value": "={{ $json.payload.media._data.body }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -128,
-        208
-      ],
-      "id": "a1e7f781-a038-422b-a5a5-6008cc9badaf",
-      "name": "Text Only Prompt"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "mode": "list",
-          "value": "gpt-4o-mini"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -80,
-        416
-      ],
-      "id": "4d9f9310-94cf-45d4-a914-1412fbfbcb5b",
-      "name": "OpenAI Chat Model",
-      "credentials": {
-        "openAiApi": {
-          "id": "LUhS4GFId8ov5yHo",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {},
-      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
-      "typeVersion": 1,
-      "position": [
-        400,
-        416
-      ],
-      "id": "695e80ad-fb7a-4882-98b0-69cdc1a27d4f",
-      "name": "Calculator"
-    },
-    {
-      "parameters": {
-        "url": "https://www.googleapis.com/customsearch/v1",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "key",
-              "value": "INSERT YOUR KEY"
-            },
-            {
-              "name": "cx",
-              "value": "INSERT YOUR CX"
-            },
-            {
-              "name": "q",
-              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequestTool",
-      "typeVersion": 4.2,
-      "position": [
-        240,
-        416
-      ],
-      "id": "4d7b423b-fd95-4878-9d83-e5b0f219f91c",
-      "name": "Search Engine"
-    },
     {
       "parameters": {},
       "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
       "typeVersion": 202502,
       "position": [
-        -1344,
-        144
+        96,
+        368
       ],
-      "id": "3288340d-f4c9-47ea-ba08-8d88cdbb967e",
+      "id": "1c291cde-8da5-435b-8162-6912bf650821",
       "name": "WAHA Trigger",
       "webhookId": "b924a7bf-e13b-4817-9b4a-60f02ad05c7c"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "77cf38f6-61ea-4349-973b-1124e60042e2",
-              "leftValue": "={{ $json.payload.from }}",
-              "rightValue": "@c.us",
-              "operator": {
-                "type": "string",
-                "operation": "endsWith"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        -656,
-        352
-      ],
-      "id": "8b513750-a572-4fbd-a2b9-cc86b22e4e36",
-      "name": "Personal or Group?"
     },
     {
       "parameters": {
@@ -331,7 +53,7 @@
                   {
                     "id": "7e4dbe6a-da50-4c02-b091-092ec1c26510",
                     "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
-                    "rightValue": "/search",
+                    "rightValue": "/s",
                     "operator": {
                       "type": "string",
                       "operation": "startsWith"
@@ -355,7 +77,7 @@
                   {
                     "id": "b446dc86-06cc-4e3f-a219-acb05277303a",
                     "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
-                    "rightValue": "/image",
+                    "rightValue": "/i",
                     "operator": {
                       "type": "string",
                       "operation": "startsWith"
@@ -379,7 +101,7 @@
                   {
                     "id": "d749e4bd-1e01-42fb-a4bb-b7d99ce49718",
                     "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
-                    "rightValue": "/song",
+                    "rightValue": "/a",
                     "operator": {
                       "type": "string",
                       "operation": "startsWith"
@@ -389,7 +111,55 @@
                 "combinator": "and"
               },
               "renameOutput": true,
-              "outputKey": "Song"
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "94dfce64-70f7-47d8-a334-227b39e38741",
+                    "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+                    "rightValue": "/v",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Video"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cb76c2d5-7fb7-4fd6-bd7c-1b3b912ca984",
+                    "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+                    "rightValue": "/genshin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Genshin"
             }
           ]
         },
@@ -398,10 +168,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        -448,
-        864
+        432,
+        384
       ],
-      "id": "11cd9888-5f9a-4245-b28a-6562c2481602",
+      "id": "59826ac0-c3c9-47c2-9e3e-d6330ed11878",
       "name": "Command"
     },
     {
@@ -411,52 +181,27 @@
         "session": "={{ $('WAHA Trigger').item.json.session }}",
         "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
         "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
-        "text": "={{ $json.output }}",
+        "text": "=*\ud83e\udd16Command for KuYoBot\ud83e\udd16*\n\n`/s` : ```Search from web```\n`/i` : ```Transcript image```\n`/v` : ```Download video from YT/TT/IG/FB/X```\n`/a` : ```Download audio from YT/TT/IG/FB/X```\n`/genshin` : ```Fetch Genshin Information```",
         "requestOptions": {}
       },
       "type": "@devlikeapro/n8n-nodes-waha.WAHA",
       "typeVersion": 202502,
       "position": [
-        448,
-        208
+        1136,
+        64
       ],
-      "id": "428f415e-262d-419e-a12e-f717c201b0a0",
-      "name": "Send Personal Message",
-      "credentials": {
-        "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
-          "name": "WAHA account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "Chatting",
-        "operation": "Send Text",
-        "session": "={{ $('WAHA Trigger').item.json.session }}",
-        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
-        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
-        "text": "=*🤖Command for Chatbot🤖*\n\n🔴 /search - Search from web\n⚪ /image - Transcript image\n🔴 /song - Download song",
-        "requestOptions": {}
-      },
-      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
-      "typeVersion": 202502,
-      "position": [
-        0,
-        576
-      ],
-      "id": "7ec46b2d-7fe4-4388-bc67-c2d27b11358d",
+      "id": "a56fac0b-1451-405b-818d-679d00eb74b5",
       "name": "Command Help",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
     },
     {
       "parameters": {
-        "url": "={{ $json.payload.media.url }}",
+        "url": "={{ $('WAHA Trigger').item.json.payload.media.url }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "wahaApi",
         "options": {}
@@ -464,14 +209,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        32,
-        1072
+        1216,
+        560
       ],
-      "id": "0b640038-b928-449e-9191-23f612e58943",
+      "id": "fd85fa00-861f-4d44-b72d-783642b3c2f2",
       "name": "Download Image1",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
@@ -486,22 +231,22 @@
           "mode": "list",
           "cachedResultName": "CHATGPT-4O-LATEST"
         },
-        "text": "={{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') + \" based on your opinion. Act like you have your own personal taste. Extra context: Smash = Marry, Pass = Wouldn't Marry\" || \"Describe the image in detail.\" }}",
+        "text": "={{ $('WAHA Trigger').item.json.payload.body.replace('/i ','') + \" based on your opinion. Act like you have your own personal taste.\" || \"Describe the image in detail.\" }}",
         "inputType": "base64",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        192,
-        1072
+        1376,
+        560
       ],
-      "id": "d2c30491-8f7d-4ead-a133-dcff32034804",
+      "id": "e622ecb9-ee92-438c-bd60-328da73bc38c",
       "name": "Analyze Image1",
       "credentials": {
         "openAiApi": {
-          "id": "LUhS4GFId8ov5yHo",
-          "name": "OpenAi account"
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
         }
       }
     },
@@ -512,7 +257,7 @@
             {
               "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
               "name": "text",
-              "value": "=# The user provided the following image and text.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') || \"Describe the image\" }}",
+              "value": "=# The user provided the following image and text.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ \n  (function(){\n    const body = $('WAHA Trigger').item.json.payload.body || \"\";\n    const trimmed = body.trim();\n\n    if (trimmed === \"/i\") {\n      return \"Describe the image\";\n    }\n    if (trimmed.startsWith(\"/i \")) {\n      return trimmed.replace(\"/i \", \"\");\n    }\n    return trimmed;\n  })()\n}}\n",
               "type": "string"
             }
           ]
@@ -522,10 +267,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        352,
-        1072
+        1536,
+        560
       ],
-      "id": "45ad4f7d-8394-47e7-9838-67d96661aba6",
+      "id": "68c2ab22-e42b-46cb-9d46-5926fca46678",
       "name": "Image + Text Prompt1"
     },
     {
@@ -540,85 +285,17 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        688,
-        1296
+        1840,
+        752
       ],
-      "id": "a7ad7935-c0a0-4fdf-8cc1-5bcb665a18d8",
+      "id": "68574e5f-9423-463c-bf28-4b9d346595be",
       "name": "OpenAI Chat Model2",
       "credentials": {
         "openAiApi": {
-          "id": "LUhS4GFId8ov5yHo",
-          "name": "OpenAi account"
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
         }
       }
-    },
-    {
-      "parameters": {
-        "url": "https://www.googleapis.com/customsearch/v1",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "key",
-              "value": "INSERT YOUR KEY"
-            },
-            {
-              "name": "cx",
-              "value": "INSERT YOUR CX"
-            },
-            {
-              "name": "q",
-              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequestTool",
-      "typeVersion": 4.2,
-      "position": [
-        1056,
-        1296
-      ],
-      "id": "094590e7-8701-498c-9ecb-424124844399",
-      "name": "Search Engine1"
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $('WAHA Trigger').item.json.payload._data.notifyName }}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
-      "typeVersion": 1.5,
-      "position": [
-        80,
-        416
-      ],
-      "id": "764d7d44-f38a-478c-a5f8-734dea08139b",
-      "name": "Store Conversation",
-      "credentials": {
-        "redis": {
-          "id": "v559yPpJK8A2M5ej",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.text }}",
-        "options": {
-          "systemMessage": "=# INTRODUCTION\n- You are an image transcription bot.\n- Your goal is to provide direct, concise, and accurate answers without unnecessary commentary.\n- You can provide information, guidance based on the image given.\n\n# CHAT STYLE\n- Keep messages concise and easy to read on WhatsApp.\n- Answer directly and briefly, like a knowledgeable assistant.\n- Use emojis only when it adds meaningful context.\n- If you don’t know the answer, use [Search Engine] to get the information.\n- Avoid long paragraphs; break messages into small, readable chunks, unless the user ask to do so.\n- Avoid filler phrases like “Let me know if you need more information” or “I’m here to help.”\n\n# BEHAVIOR\n- Do not share external links unless explicitly instructed by the user.\n- Do not add polite closings or extra suggestions unless explicitly asked.\n- Do not ask addition question.\n- Stay on topic; avoid unnecessary chatter or commentary.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.9,
-      "position": [
-        720,
-        1072
-      ],
-      "id": "645ce67b-ae3d-4aab-a3bc-4e1cfc99ef10",
-      "name": "AI Image Transcription"
     },
     {
       "parameters": {
@@ -627,7 +304,7 @@
             {
               "id": "c05a7fbf-309a-407e-9fee-7e0b03f4a5c8",
               "name": "text",
-              "value": "={{ $json.payload.media._data.body.replace('/search ','') }}",
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace('/s ','') }}",
               "type": "string"
             }
           ]
@@ -637,28 +314,11 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        752
+        1152,
+        240
       ],
-      "id": "7064e756-9cdf-45cd-9826-b32f1d2e2f9f",
+      "id": "f15fa7b5-1cf8-460d-8031-ea0675b8c4f4",
       "name": "Search Title"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.text }}",
-        "options": {
-          "systemMessage": "=# INTRODUCTION\n- You are a searchin bot.\n- Your goal is to provide direct, concise, and accurate answers without unnecessary commentary.\n\n# CHAT STYLE\n- Keep messages concise and easy to read on WhatsApp.\n- Answer directly and briefly, like a knowledgeable assistant.\n- Ensure that the information is the most recent and latest\n- Use [Search Engine2] to get the most related article\n- Avoid long paragraphs; break messages into small, readable chunks, unless the user ask to do so.\n- By default, give only one the most related article. If user ask for spesific number, follow the request.\n\n# FORMAT STYLE\n\"1. (Information)\nSource: (Give URL)\n\nMini Conclusion: (Give short, precise conclusion)\"\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.9,
-      "position": [
-        288,
-        576
-      ],
-      "id": "20af39fb-65eb-4309-895c-fce974cfec0a",
-      "name": "AI Image Transcription1"
     },
     {
       "parameters": {
@@ -673,48 +333,17 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        224,
-        752
+        1552,
+        240
       ],
-      "id": "e2b3d42e-2352-4591-aede-ce8b693eb383",
+      "id": "eef1e9d8-0f1d-4b32-a9cb-f80d6120b076",
       "name": "OpenAI Chat Model3",
       "credentials": {
         "openAiApi": {
-          "id": "LUhS4GFId8ov5yHo",
-          "name": "OpenAi account"
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
         }
       }
-    },
-    {
-      "parameters": {
-        "url": "https://www.googleapis.com/customsearch/v1",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "key",
-              "value": "INSERT YOUR KEY"
-            },
-            {
-              "name": "cx",
-              "value": "INSERT YOUR CX"
-            },
-            {
-              "name": "q",
-              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequestTool",
-      "typeVersion": 4.2,
-      "position": [
-        528,
-        752
-      ],
-      "id": "1d85c9f8-d318-4724-8a7d-2bb1e29a6372",
-      "name": "Search Engine2"
     },
     {
       "parameters": {
@@ -729,14 +358,14 @@
       "type": "@devlikeapro/n8n-nodes-waha.WAHA",
       "typeVersion": 202502,
       "position": [
-        1024,
-        1072
+        2208,
+        560
       ],
-      "id": "6b55f1a5-559d-4f95-98b7-669a65c7ddcd",
+      "id": "c0cc5ba2-c2ec-40b8-807d-b8ca3cf74ba3",
       "name": "Image Commentary",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
@@ -754,14 +383,14 @@
       "type": "@devlikeapro/n8n-nodes-waha.WAHA",
       "typeVersion": 202502,
       "position": [
-        640,
-        576
+        2032,
+        -80
       ],
-      "id": "1f52e788-c2c9-4c72-95f7-8a0011d854ff",
+      "id": "cf138671-4e0e-401a-8997-beaa5982554f",
       "name": "Search Result",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
@@ -778,11 +407,11 @@
             },
             {
               "name": "key",
-              "value": "INSERT YOUR KEY"
+              "value": "AIzaSyC_vN4JTwh6XfgllLFOYbF5ui9b2fWTge0"
             },
             {
               "name": "q",
-              "value": "={{ $json.payload.body.replace ('/song ','') }} lyrics"
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace ('/a ','') }} lyrics"
             }
           ]
         },
@@ -791,33 +420,35 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        64,
-        1264
+        1248,
+        800
       ],
-      "id": "365feb12-b436-4354-ae54-6cbc243f74e5",
-      "name": "Get YT Link"
+      "id": "ddcc0c1c-77a4-419f-baa5-b1b1a5e29464",
+      "name": "Get YT Link",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
         "resource": "Chatting",
-        "operation": "Send Text",
+        "operation": "Send File",
         "session": "={{ $('WAHA Trigger').item.json.session }}",
         "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "file": "={\n  \"mimetype\": \"audio/mp3\",\n  \"filename\": \"{{ $json.file.split('/').pop() }}\",\n  \"url\": \"{{ $json.file }}\"\n}",
         "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
-        "text": "=🎶Your Song: {{ $json.file }}",
+        "caption": "=\ud83c\udfb6 *Link to download:* {{ $json.file }}",
         "requestOptions": {}
       },
       "type": "@devlikeapro/n8n-nodes-waha.WAHA",
       "typeVersion": 202502,
       "position": [
-        480,
-        1392
+        1680,
+        912
       ],
-      "id": "97e13b89-c442-4ba5-9ec7-9b91a1864200",
+      "id": "edce7623-76d8-4dd1-8eae-b3b72860b4a0",
       "name": "Send Audio Link",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
@@ -825,13 +456,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://yt.fiverse.my/download",
+        "url": "https://yt-dlp.fiverse.my/download",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
             {
               "name": "url",
-              "value": "=https://www.youtube.com/watch?v={{ $json.items[0].id.videoId }}"
+              "value": "=https://youtu.be/{{ $json.items[0].id.videoId }}?si=lmKx2u1WWtQec87-"
             },
             {
               "name": "type",
@@ -844,11 +475,12 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        256,
-        1264
+        1440,
+        784
       ],
-      "id": "6d04020d-9726-4727-abdb-469ad33b082d",
-      "name": "Download Audio"
+      "id": "c17891a7-fdb8-4a8d-9782-f516dbcabc6f",
+      "name": "Download Audio",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -862,7 +494,7 @@
           "conditions": [
             {
               "id": "503b541f-7749-4d0e-bf10-81cf8da6e96c",
-              "leftValue": "={{ $json.payload.media._data.quotedMsg.type }}",
+              "leftValue": "={{ $('WAHA Trigger').item.json.payload.media._data.quotedMsg.type }}",
               "rightValue": "image",
               "operator": {
                 "type": "string",
@@ -877,31 +509,32 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -208,
-        944
+        976,
+        432
       ],
-      "id": "decfa300-1a72-444d-b722-1eb43380f388",
+      "id": "3e422acf-5d19-4cf2-a3a3-9cf0b02fe298",
       "name": "Reply or Not?"
     },
     {
       "parameters": {
         "resource": "Chats",
         "operation": "Get Chat Message",
-        "chatId": "={{ $json.payload._data.quotedMsg.from }}",
-        "messageId": "={{ $json.payload.replyTo._data.id._serialized }}",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload._data.quotedMsg.from }}",
+        "messageId": "={{ $('WAHA Trigger').item.json.payload.replyTo._data.id._serialized }}",
         "requestOptions": {}
       },
       "type": "@devlikeapro/n8n-nodes-waha.WAHA",
       "typeVersion": 202502,
       "position": [
-        32,
-        912
+        1216,
+        400
       ],
-      "id": "2ea9dc7b-1600-4005-b86b-6cae6f5cf70f",
+      "id": "f7db6952-fe74-437e-9980-b22709fe1cff",
       "name": "Gets message by id",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
@@ -916,14 +549,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        192,
-        912
+        1376,
+        400
       ],
-      "id": "02e508dc-2b3e-4b0c-99ef-3afbae5299d9",
+      "id": "66059986-ca21-41d6-8f81-45ee24aefa86",
       "name": "Download Image2",
       "credentials": {
         "wahaApi": {
-          "id": "PljTalUOeErfOzxx",
+          "id": "D86Rp9kbbr37Pq8A",
           "name": "WAHA account"
         }
       }
@@ -938,22 +571,22 @@
           "mode": "list",
           "cachedResultName": "CHATGPT-4O-LATEST"
         },
-        "text": "={{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') || \"Describe the image in detail.\" }}",
+        "text": "={{ $('WAHA Trigger').item.json.payload.body.replace('/i ','') || \"Describe the image in detail.\" }}",
         "inputType": "base64",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        352,
-        912
+        1536,
+        400
       ],
-      "id": "fca5b7eb-1267-44b4-b439-829de092f1d0",
+      "id": "7350464c-1d30-4c50-97b5-0384ec71c1a0",
       "name": "Analyze Image2",
       "credentials": {
         "openAiApi": {
-          "id": "LUhS4GFId8ov5yHo",
-          "name": "OpenAi account"
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
         }
       }
     },
@@ -964,7 +597,7 @@
             {
               "id": "67552183-de2e-494a-878e-c2948e8cb6bb",
               "name": "text",
-              "value": "=# The user replied the following image and caption.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body.replace('/image ','') || \"Describe the image\" }}\n\n## REPLIED IMAGE CAPTION:\n\"{{ $('Gets message by id').item.json.body.replace('/image ','') }}\"",
+              "value": "=# The user replied the following image and caption.\n\n## IMAGE CONTENT:\n{{ $json.content }}\n\n## USER MESSAGE:\n{{ $('WAHA Trigger').item.json.payload.body.replace('/i ','') || \"Describe the image\" }}\n\n## REPLIED IMAGE CAPTION:\n\"{{ $('Gets message by id').item.json.body.replace('/i ','') }}\"",
               "type": "string"
             }
           ]
@@ -974,22 +607,22 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        512,
-        912
+        1696,
+        400
       ],
-      "id": "f30a5c97-c944-45e1-80a5-624560d333e3",
+      "id": "d271fc9f-b578-4917-be40-578d7f0c9107",
       "name": "Image + Caption"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://yt.fiverse.my/download",
+        "url": "https://yt-dlp.fiverse.my/download",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
             {
               "name": "url",
-              "value": "={{ $json.payload.body.replace('/song ','') }}"
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace('/a ','') }}"
             },
             {
               "name": "type",
@@ -1002,11 +635,12 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        64,
-        1472
+        1248,
+        960
       ],
-      "id": "234c3ad7-68d4-4498-96f2-89f451151695",
-      "name": "Download Audio1"
+      "id": "67f42cf3-c970-4e62-929a-0554e515f8ed",
+      "name": "Download Audio1",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1020,8 +654,8 @@
           "conditions": [
             {
               "id": "162461a2-3fc5-41b0-b4af-fae97fa62e6c",
-              "leftValue": "={{ $json.payload.body }}",
-              "rightValue": "/song https://",
+              "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+              "rightValue": "/a https://",
               "operator": {
                 "type": "string",
                 "operation": "notStartsWith"
@@ -1035,163 +669,860 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -192,
-        1360
+        992,
+        848
       ],
-      "id": "320a6b6f-4bf3-4503-939a-0f6951b3f373",
+      "id": "ccd57eea-8223-4073-8d11-df9ee25c7889",
       "name": "Title or Link?"
     },
     {
       "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1984,
+        1168
+      ],
+      "id": "d2d49446-ee45-406f-a6a2-ccc578fb2ec6",
+      "name": "Stop Typing4",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        992,
+        64
+      ],
+      "id": "9a50576a-82ea-45e5-b97a-407e0503bce0",
+      "name": "Start Typing1",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        992,
+        240
+      ],
+      "id": "eea2e749-d98f-4cc0-a385-8dc2eb818cdb",
+      "name": "Start Typing2",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1280,
+        64
+      ],
+      "id": "2bc18e62-de64-4382-a8c5-dde61f3a2309",
+      "name": "Stop Typing1",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        832,
+        432
+      ],
+      "id": "46dfc23d-e537-4140-be36-788a4add9bf9",
+      "name": "Start Typing3",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        848,
+        848
+      ],
+      "id": "c367980e-e856-45a0-847d-8010814a5e9a",
+      "name": "Start Typing4",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        2304,
+        0
+      ],
+      "id": "59894cef-34bb-4444-89ab-07ccc28039f9",
+      "name": "Stop Typing2",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        2400,
+        560
+      ],
+      "id": "a8518cf7-9e0e-4f95-a586-9dbd5ca31092",
+      "name": "Stop Typing3",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "key",
+              "value": "AIzaSyC_vN4JTwh6XfgllLFOYbF5ui9b2fWTge0"
+            },
+            {
+              "name": "q",
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace ('/v ','') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        1168
+      ],
+      "id": "1d3947a1-4021-4cf1-a6d9-0e17c37bb060",
+      "name": "Get YT Link1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "162461a2-3fc5-41b0-b4af-fae97fa62e6c",
+              "leftValue": "={{ $('WAHA Trigger').item.json.payload.body }}",
+              "rightValue": "/v https://",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        1248
+      ],
+      "id": "7e466dde-6702-4a9d-bbac-eccde850805e",
+      "name": "Title or Link?1"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        848,
+        1248
+      ],
+      "id": "fa2422e8-8dde-4cc5-a3e7-05fa99976bb9",
+      "name": "Start Typing5",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yt-dlp.fiverse.my/download",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "=https://www.youtube.com/watch?v={{ $json.items[0].id.videoId }}"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        1152
+      ],
+      "id": "aab915db-9d11-4d3a-8eec-cc42695cf150",
+      "name": "Download Video",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yt-dlp.fiverse.my/download",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace('/v ','') }}"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        1344
+      ],
+      "id": "d8f92754-a7f9-49cb-b9fb-cc2abec8c6a7",
+      "name": "Download Video1",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Video",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "file": "={\n  \"mimetype\": \"video/mp4\",\n  \"filename\": \"{{ $json.file.split('/').pop() }}\",\n  \"url\": \"{{ $json.file }}\"\n}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "caption": "=\ud83d\udcf9 *Link to download:* {{ $json.file }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1680,
+        1312
+      ],
+      "id": "3bb7c879-5cb2-4257-abd8-84643a29923b",
+      "name": "Send Video Link",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# INTRODUCTION\n- You are a searching bot.\n- Your goal is to provide direct, concise, and accurate answers without unnecessary commentary.\n\n# CHAT STYLE\n- Keep messages concise and easy to read on WhatsApp.\n- Answer directly and briefly, like a knowledgeable assistant.\n- Ensure that the information is the most recent and latest\n- Use **search_google** tool to get the most related article\n- Avoid long paragraphs; break messages into small, readable chunks, unless the user ask to do so.\n- Do not answer without refering or scraping the website\n- By default, give only one the most related article. If user ask for spesific number, follow the request.\n\n# FORMAT STYLE\n\"1. (Information)\nSource: (Give URL)\n\nMini Conclusion: (Give short, precise conclusion)\"\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1664,
+        48
+      ],
+      "id": "bed0a9ce-20df-4ee7-b9f0-15e054fac7f5",
+      "name": "AI Search",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=# INTRODUCTION\n- You are an image transcription bot.\n- Your goal is to analyze and provide direct, concise, and accurate answers without unnecessary commentary based on the description of the image.\n\n# CHAT STYLE\n- Keep messages concise and easy to read on WhatsApp.\n- Answer directly and briefly, like a knowledgeable assistant.\n- Use emojis only when it adds meaningful context.\n- Do [Search Engine] first before giving the information.\n- Avoid long paragraphs; break messages into small, readable chunks, unless the user ask to do so.\n- Avoid filler phrases like \u201cLet me know if you need more information\u201d or \u201cI\u2019m here to help.\u201d\n\n# BEHAVIOR\n- Do not share external links unless explicitly instructed by the user.\n- Do not add polite closings or extra suggestions unless explicitly asked.\n- Do not ask addition question.\n- Stay on topic; avoid unnecessary chatter or commentary.\n\n# CURRENT DATE AND TIME\n{{ $now.toString() }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1904,
+        560
+      ],
+      "id": "755e6a89-3d23-4467-a23e-f61135dec1c5",
+      "name": "AI Image"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=Sorry, cannot download the video.",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1680,
+        1472
+      ],
+      "id": "8c28fcc3-bea2-457b-aa0c-d15330d02c5c",
+      "name": "Send Error Message",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=Sorry, cannot download the audio.",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1680,
+        1072
+      ],
+      "id": "bc39e409-14f8-4634-afca-14e046925e03",
+      "name": "Send Error Message1",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        288
+      ],
+      "id": "f13b9824-4b3a-426a-806d-dc2cae40b519",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "content": "# WhatsApp ChatBot",
+        "height": 2352,
+        "width": 2688,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "4e862699-1833-42cd-9966-cb48821c5f7f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "1. Image Transcription",
+        "sessionKey": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "sessionTTL": 86400,
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
       "typeVersion": 1.5,
       "position": [
-        848,
-        1296
+        1728,
+        256
       ],
-      "id": "a57e6ff2-272c-41cc-93b3-7d61dc00420f",
-      "name": "Store Image Transcription",
+      "id": "9bafc54b-cfea-4ebe-8e23-1426e413b03d",
+      "name": "Redis (Search)",
       "credentials": {
         "redis": {
-          "id": "v559yPpJK8A2M5ej",
+          "id": "Cqe8AdOAsLFLRPfR",
           "name": "Redis account"
         }
       }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "sessionTTL": 86400,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1984,
+        752
+      ],
+      "id": "53a085a1-6e0d-4838-bac4-833086bb98e7",
+      "name": "Redis (Image)",
+      "credentials": {
+        "redis": {
+          "id": "Cqe8AdOAsLFLRPfR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen3:14b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        288
+      ],
+      "id": "5499523b-79fe-4bc2-96ea-78febe92615f",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "HL6qGIcjCbCUHYy9",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search Google for current information, news, and facts. Input should be a search query string.",
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCDVrXVsuI4jBJ5FjWhN4wAAUcvuTe_u6k"
+            },
+            {
+              "name": "cx",
+              "value": "d04ea059f84df4aaf"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1872,
+        272
+      ],
+      "id": "de943e76-f346-4793-845e-e55dddba4581",
+      "name": "search_google"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "=*Error:* {{ $json.error }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        2032,
+        96
+      ],
+      "id": "4be416f1-b21a-472a-8462-6a8c2cb82e8c",
+      "name": "Search Result1",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Start Typing",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        832,
+        1648
+      ],
+      "id": "f19cffb9-32e1-4811-9c3e-1873c44e749e",
+      "name": "Start Typing6",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c05a7fbf-309a-407e-9fee-7e0b03f4a5c8",
+              "name": "text",
+              "value": "={{ $('WAHA Trigger').item.json.payload.body.replace('/s ','') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        1648
+      ],
+      "id": "7be040b5-58dc-4822-afaf-abbe6d7ac0d7",
+      "name": "Search Title1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        1856
+      ],
+      "id": "6b0cacbc-011a-430a-af10-726a8f51c57d",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "NkjjZZHURFrwFzmh",
+          "name": "OpenAi Fiverse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=## Role\nYou are a Genshin Impact Wiki Assistant. You MUST use the wiki tools to answer every question. Never answer from memory alone \u2014 always fetch live data first.\n\n## CRITICAL RULES\n- **NEVER say \"no results\" after just ONE search.** Always try at least 2\u20133 different search strategies before giving up.\n- **NEVER answer from your training data.** Always call a tool first.\n- **NEVER use a page title that contains a slash (/).** If search returns a title like \"Character/List\", skip it \u2014 the API cannot handle slashes in titles.\n- Always use underscores in page titles: `Hu_Tao`, `Raiden_Shogun`, `Nod_Krai`\n- Category names are case-sensitive: `Pyro_Characters` not `pyro_characters`\n\n## Tools \u2014 When to Use Each\n| Tool | Use when |\n|------|----------|\n| `/search` | You need to find the exact page title. Always do this first. |\n| `/page/{title}` | You have a valid title (no slashes) and want full page content. Add `format=structured` for stats/infobox. |\n| `/page/{title}/sections` | You want to see what sections exist on a page before reading one. |\n| `/page/{title}/section/{index}` | You already know the section index number from calling `/sections` first. NEVER call this without an index. |\n| `/category/{name}` | You want a list of all pages in a group (e.g. all Pyro characters, all swords). |\n\n## Correct Workflows\n\n### Character info (stats, element, rarity, weapon type):\n1. `/search` with character name \u2192 pick a title with NO slash\n2. `/page/{title}?format=structured`\n\n### Character talents, constellations, story:\n1. `/search` \u2192 get title\n2. `/page/{title}/sections` \u2192 find the section name and index\n3. `/page/{title}/section/{index}` using that index number\n\n### Characters by element or weapon type:\n- `/category/Pyro_Characters`, `/category/Cryo_Characters`, `/category/Swords`, `/category/Bows`\n- No search needed \u2014 go directly to category\n\n### Characters from a specific region (e.g. Nod Krai, Mondstadt, Liyue):\n1. `/search` \u2192 search the region name (e.g. \"Nod Krai\")\n2. Pick a title with NO slash \u2192 `/page/{title}/sections` \u2192 look for \"Characters\" or \"Residents\" section\n3. Also try `/category/Nod_Krai` or `/category/Nod_Krai_Characters`\n4. If still nothing \u2192 tell user the wiki may not have this region's character list yet\n\n### Weapons, artifacts, enemies, quests:\n1. `/search` with exact name \u2192 get clean title (no slashes)\n2. `/page/{title}?format=structured`\n\n## If Search Returns Bad Results\n- Ignore any result that contains a `/` (slash) in the title\n- Try a shorter keyword: \"Nod Krai\" instead of \"Nod Krai characters\"\n- Try a category instead of a page search\n- After 3 failed attempts with different strategies, tell the user honestly\n\n## Response Style\n- **Default: short and direct. Maximum 3\u20135 lines unless the user explicitly asks for details.**\n- One fact = one sentence. Do not elaborate unless asked.\n- No greetings, no filler, no \"Here is the information you requested\".\n- No closing lines like \"Let me know if you want more!\" \u2014 just answer and stop.\n- Only use bullet points if listing 3+ items.\n- If user asks for \"details\", \"full info\", or \"explain\" \u2014 then you may give a longer answer.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1312,
+        1648
+      ],
+      "id": "78287287-03dd-47db-8b0c-d89097f930de",
+      "name": "AI Search1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Stop Typing",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1840,
+        1632
+      ],
+      "id": "48ac1f4d-9262-4e80-91c5-1ad6db716028",
+      "name": "Stop Typing8",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').item.json.session }}",
+        "chatId": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "reply_to": "={{ $('WAHA Trigger').item.json.payload.id }}",
+        "text": "={{ $json.output }}",
+        "linkPreview": false,
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1680,
+        1632
+      ],
+      "id": "7e03317e-454e-4b10-8c1c-6b51ac37ccfd",
+      "name": "Genshin Result",
+      "credentials": {
+        "wahaApi": {
+          "id": "D86Rp9kbbr37Pq8A",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WAHA Trigger').item.json.payload.from }}",
+        "sessionTTL": 86400
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1280,
+        1856
+      ],
+      "id": "8a96d469-333d-4fdc-a8df-cdd710f56f04",
+      "name": "Redis (Genshin)",
+      "credentials": {
+        "redis": {
+          "id": "Cqe8AdOAsLFLRPfR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search the Genshin Impact wiki for page titles matching the query. Returns a list of matching page titles. Use this FIRST to find the exact page title before calling /page/{title}. Titles use underscores (e.g. 'Hu_Tao', 'Raiden_Shogun').",
+        "url": "https://genshin-wiki-2.fiverse.my/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Search keyword, e.g. 'Hu Tao', 'sword', 'Mondstadt'`, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Max number of results to return (1\u201350, default 10)`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        1856
+      ],
+      "id": "10bb1e53-fd62-418a-a281-6f740c2d7646",
+      "name": "Genshin Wiki /search"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches the full content of a Genshin Impact wiki page. Use format=plain (default) for clean readable text with a section index. Use format=structured for machine-readable output: infobox as key-value pairs (stats, rarity, element, etc.) and sections as a named dictionary. Titles use underscores (e.g. 'Hu_Tao', 'Raiden_Shogun'). Get the exact title from /search first.",
+        "url": "=https://genshin-wiki-2.fiverse.my/page/{{ $fromAI('title', 'The exact wiki page title using underscores, e.g. Hu_Tao or Raiden_Shogun') }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "format",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1584,
+        1856
+      ],
+      "id": "8822bd3d-f126-401a-b824-4d9b0f36782b",
+      "name": "Genshin Wiki /page/{title}"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Returns all section names and their numeric indexes for a given wiki page. Use this as a lightweight preview before fetching a specific section. Titles use underscores (e.g. 'Hu_Tao'). Section index 0 is typically the introduction.",
+        "url": "=https://genshin-wiki-2.fiverse.my/page/{{ $fromAI('title', 'The exact wiki page title using underscores, e.g. Hu_Tao or Raiden_Shogun') }}/sections",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1728,
+        1856
+      ],
+      "id": "f0fa184e-7ed8-4772-bf31-2f01066149e2",
+      "name": "Genshin Wiki /page/{title}/section"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches the content of one section from a wiki page by its numeric index. Use /page/{title}/sections first to discover available section indexes. More efficient than fetching the full page when only one section is needed.",
+        "url": "=https://genshin-wiki-2.fiverse.my/page/{{ $fromAI('title', 'The exact wiki page title using underscores, e.g. Hu_Tao') }}/section/{{ $fromAI('index', 'The section index number, e.g. 0, 1, 2. Get available indexes from /page/{title}/sections first.') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        2032
+      ],
+      "id": "3e804a99-21c6-41ad-9706-c485a0a3c7d8",
+      "name": "Genshin Wiki /page/{title}/section/{index}"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Returns all page titles belonging to a Genshin Impact wiki category. Useful for discovering all characters, weapons, or items of a specific type. Example category names: 'Pyro_Characters', 'Swords', 'Mondstadt', 'Version_4.0'. Category names use underscores and are case-sensitive.",
+        "url": "=https://genshin-wiki-2.fiverse.my/category/{{ $fromAI('category', 'The wiki category name using underscores, e.g. Pyro_Characters, Swords, Mondstadt. Category names are case-sensitive.') }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Max number of pages to return (1\u2013500, default 50)`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        2032
+      ],
+      "id": "cc3a2946-6ae8-4e01-82b6-e7434c898c60",
+      "name": "Genshin Wiki /category/{name}"
     }
   ],
-  "pinData": {},
   "connections": {
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Send Personal Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Input Type": {
-      "main": [
-        [
-          {
-            "node": "Download Image",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Text Only Prompt",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Download Image": {
-      "main": [
-        [
-          {
-            "node": "Analyze Image",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Analyze Image": {
-      "main": [
-        [
-          {
-            "node": "Image + Text Prompt",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Text Only Prompt": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Image + Text Prompt": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Calculator": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Search Engine": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "WAHA Trigger": {
       "main": [
         [],
-        [
-          {
-            "node": "Personal or Group?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Personal or Group?": {
-      "main": [
-        [
-          {
-            "node": "Check Input Type",
-            "type": "main",
-            "index": 0
-          }
-        ],
         [
           {
             "node": "Command",
@@ -1205,28 +1536,42 @@
       "main": [
         [
           {
-            "node": "Command Help",
+            "node": "Start Typing1",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Search Title",
+            "node": "Start Typing2",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Reply or Not?",
+            "node": "Start Typing3",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Title or Link?",
+            "node": "Start Typing4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Start Typing5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Start Typing6",
             "type": "main",
             "index": 0
           }
@@ -1259,19 +1604,8 @@
       "ai_languageModel": [
         [
           {
-            "node": "AI Image Transcription",
+            "node": "AI Image",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Search Engine1": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Image Transcription",
-            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -1281,19 +1615,8 @@
       "main": [
         [
           {
-            "node": "AI Image Transcription",
+            "node": "AI Image",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Store Conversation": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_memory",
             "index": 0
           }
         ]
@@ -1303,7 +1626,7 @@
       "main": [
         [
           {
-            "node": "AI Image Transcription1",
+            "node": "AI Search",
             "type": "main",
             "index": 0
           }
@@ -1314,41 +1637,8 @@
       "ai_languageModel": [
         [
           {
-            "node": "AI Image Transcription1",
+            "node": "AI Search",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Search Engine2": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Image Transcription1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Image Transcription": {
-      "main": [
-        [
-          {
-            "node": "Image Commentary",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Image Transcription1": {
-      "main": [
-        [
-          {
-            "node": "Search Result",
-            "type": "main",
             "index": 0
           }
         ]
@@ -1362,6 +1652,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Send Error Message1",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1370,6 +1667,13 @@
         [
           {
             "node": "Send Audio Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message1",
             "type": "main",
             "index": 0
           }
@@ -1431,7 +1735,7 @@
       "main": [
         [
           {
-            "node": "AI Image Transcription",
+            "node": "AI Image",
             "type": "main",
             "index": 0
           }
@@ -1443,6 +1747,13 @@
         [
           {
             "node": "Send Audio Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message1",
             "type": "main",
             "index": 0
           }
@@ -1467,26 +1778,419 @@
         ]
       ]
     },
-    "Store Image Transcription": {
+    "Start Typing1": {
+      "main": [
+        [
+          {
+            "node": "Command Help",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing2": {
+      "main": [
+        [
+          {
+            "node": "Search Title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Command Help": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing3": {
+      "main": [
+        [
+          {
+            "node": "Reply or Not?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing4": {
+      "main": [
+        [
+          {
+            "node": "Title or Link?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Result": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Commentary": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Audio Link": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get YT Link1": {
+      "main": [
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Title or Link?1": {
+      "main": [
+        [
+          {
+            "node": "Get YT Link1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing5": {
+      "main": [
+        [
+          {
+            "node": "Title or Link?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Send Video Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video1": {
+      "main": [
+        [
+          {
+            "node": "Send Video Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Video Link": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Search": {
+      "main": [
+        [
+          {
+            "node": "Search Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Result1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Image": {
+      "main": [
+        [
+          {
+            "node": "Image Commentary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Error Message": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Error Message1": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis (Search)": {
       "ai_memory": [
         [
           {
-            "node": "AI Image Transcription",
+            "node": "AI Search",
             "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis (Image)": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Image",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "search_google": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Result1": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Typing6": {
+      "main": [
+        [
+          {
+            "node": "Search Title1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Title1": {
+      "main": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Search1": {
+      "main": [
+        [
+          {
+            "node": "Genshin Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genshin Result": {
+      "main": [
+        [
+          {
+            "node": "Stop Typing8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis (Genshin)": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Genshin Wiki /search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genshin Wiki /page/{title}": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genshin Wiki /page/{title}/section": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genshin Wiki /page/{title}/section/{index}": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genshin Wiki /category/{name}": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Search1",
+            "type": "ai_tool",
             "index": 0
           }
         ]
       ]
     }
   },
-  "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
   },
-  "versionId": "c489611e-568a-4939-a5a0-1d86d84a1ea9",
-  "meta": {
-    "instanceId": "02ca211bb7f80befae91df4f8356790118fa4009bc76bc98463890b1878a38e6"
-  },
-  "id": "z4TEm6eNRXTuxW7N",
-  "tags": []
+  "staticData": null
 }
